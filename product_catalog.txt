@@ -1,0 +1,70 @@
+TechStore Catalog - Electronics & Software Solutions
+
+PRODUCT CATEGORY: PRODUCTIVITY SOFTWARE
+
+Product ID: TS-PS-001
+Name: CodeMaster Pro 2024
+Description: Advanced integrated development environment (IDE) for Java, Python, and C++ developers. Features include real-time code analysis, intelligent code completion, built-in debugger, and cloud synchronization.
+Price: $99.99 per year
+System Requirements: Windows 10+, macOS 10.14+, Linux (Ubuntu 18.04+)
+Key Features:
+- AI-powered code completion
+- Cross-platform debugging tools
+- Version control integration (Git, SVN)
+- Plugin ecosystem with 500+ community extensions
+- 24/7 technical support
+
+Product ID: TS-PS-002
+Name: DataVault Enterprise
+Description: Comprehensive data backup and recovery solution for businesses. Supports continuous backup, incremental backups, and cloud archival with military-grade encryption.
+Price: $199.99 per month (per 100 GB)
+Compatibility: Windows Server, Linux, cloud platforms (AWS, Azure, GCP)
+Key Features:
+- Real-time continuous backup
+- Ransomware protection
+- Automated disaster recovery
+- Compliance with HIPAA, GDPR, SOC 2
+- Unlimited user access
+
+PRODUCT CATEGORY: HARDWARE ACCESSORIES
+
+Product ID: TS-HW-001
+Name: CloudSync Pro 4K Webcam
+Description: Ultra-high definition webcam with 4K resolution at 60fps. Includes built-in microphone array, auto-focus, and low-light correction for superior video conferencing.
+Price: $149.99
+Connectivity: USB 3.0, USB-C adapter included
+Specifications:
+- Resolution: 4K (3840 x 2160)
+- Frame Rate: 60 fps
+- Field of View: 80-degree wide angle
+- Built-in noise cancellation microphone
+- Compatibility: Windows, macOS, Linux
+
+Product ID: TS-HW-002
+Name: ErgoPro Wireless Mouse
+Description: Ergonomic wireless mouse with precision tracking and customizable buttons. Designed to reduce strain during long work sessions with a contoured shape for wrist support.
+Price: $49.99
+Wireless Protocol: 2.4 GHz (with USB receiver)
+Features:
+- 3 programmable buttons
+- Adjustable DPI (800-3200)
+- 40-hour battery life
+- Compatible with most operating systems
+- Ambidextrous design option available
+
+PRODUCT CATEGORY: CLOUD SERVICES
+
+Product ID: TS-CS-001
+Name: CloudHost Business Plan
+Description: Scalable cloud hosting platform with automatic load balancing, auto-scaling, and 99.99% uptime SLA. Includes managed databases, CDN, and DDoS protection.
+Price: $499.99 per month (base) + usage
+Regions: 15 global data centers
+Inclusions:
+- 500 GB SSD storage
+- Unlimited bandwidth
+- 24/7 monitoring and incident response
+- Database management (MySQL, PostgreSQL, MongoDB)
+- API rate: 1 million requests/month included
+
+COMPANY INFO:
+TechStore has been serving enterprise and individual customers since 2005. We pride ourselves on delivering cutting-edge technology solutions with exceptional customer support. Visit www.techstore-catalog.com for more information.

@@ -1,0 +1,65 @@
+Chapter 3: Object-Oriented Programming in Java
+
+3.1 Classes and Objects
+
+A class is a blueprint for creating objects in Java. It defines the properties (attributes) and behaviors (methods) that objects created from the class will have. Every class in Java is derived from the Object class, which is the superclass of all classes in Java.
+
+Classes are declared using the 'class' keyword followed by the class name. By convention, class names start with an uppercase letter. The body of a class contains the declaration of member variables (fields) and methods.
+
+Example class declaration:
+public class Student {
+    private String name;
+    private int age;
+    private double gpa;
+    
+    public Student(String name, int age, double gpa) {
+        this.name = name;
+        this.age = age;
+        this.gpa = gpa;
+    }
+    
+    public void displayInfo() {
+        System.out.println("Name: " + name + ", Age: " + age + ", GPA: " + gpa);
+    }
+}
+
+3.2 Inheritance
+
+Inheritance is a mechanism where a new class is created (derived class) that inherits properties and behaviors from an existing class (base class). The derived class extends the base class using the 'extends' keyword.
+
+In Java, a class can directly inherit from only one base class (single inheritance), but it can implement multiple interfaces. Inheritance promotes code reusability and establishes a natural hierarchy between classes.
+
+Key points about inheritance:
+- The derived class inherits all non-private members of the base class
+- The derived class can override methods of the base class to provide specialized implementations
+- The 'super' keyword is used to access members of the base class from the derived class
+- If no explicit inheritance is specified, a class implicitly extends the Object class
+
+Example of inheritance:
+public class Person {
+    protected String name;
+    protected int age;
+    
+    public void introduce() {
+        System.out.println("I am " + name);
+    }
+}
+
+public class Student extends Person {
+    private double gpa;
+    
+    @Override
+    public void introduce() {
+        System.out.println("I am " + name + " and my GPA is " + gpa);
+    }
+}
+
+3.3 Access Modifiers
+
+Java provides four access levels specified by access modifiers:
+- public: The member is accessible from anywhere
+- protected: The member is accessible within the same package and in subclasses
+- default (no modifier): The member is accessible only within the same package
+- private: The member is accessible only within the same class
+
+These modifiers control the visibility and accessibility of classes, methods, and variables.
