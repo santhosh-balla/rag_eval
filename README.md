@@ -1,23 +1,29 @@
 # RAG Pipeline with Groq & RAGAs Evaluation
 
-A baseline Retrieval-Augmented Generation (RAG) pipeline using Groq API, OpenAI embeddings, and RAGAs for automated evaluation.
+A baseline Retrieval-Augmented Generation (RAG) pipeline using Groq API, HuggingFace embeddings, and RAGAs for automated evaluation.
 
 ## 📋 Quick Summary
 
 This project implements:
 
-- **RAG Pipeline**: Retrieves relevant text chunks from domain documents and generates answers using Groq's Llama 3.1 70B
-- **Vector Store**: Local Chroma database with OpenAI embeddings (text-embedding-3-small)
+- **RAG Pipeline**: Retrieves relevant text chunks from domain documents and generates answers using Groq's Llama 3.1 8B
+- **Vector Store**: Local Chroma database with HuggingFace embeddings (all-MiniLM-L6-v2) - free, local, no quota limits
 - **Evaluation**: 5 gold-standard Q&A pairs evaluated with RAGAs metrics (Faithfulness, Answer Relevance, Context Precision, Context Recall)
-- **Domains**: Java Textbook, Terms & Conditions, Product Catalog
+- **Domains**: Java Textbook, Terms & Conditions, Honeywell Products Catalog
 
-## 🚀 Setup Instructions
+## 🚀 Quick Start
 
-### 1. Install Dependencies
-
+### Fast Mode (Recommended for Testing)
 ```bash
-pip install -r requirements.txt
+SKIP_METRICS=true python rag_pipeline.py
 ```
+⏱️ **Takes ~30 seconds** - Tests RAG without slow metrics
+
+### Full Mode (Includes All Metrics)
+```bash
+python rag_pipeline.py
+```
+⏱️ **Takes ~15 minutes** - Includes RAGAs evaluation metrics
 
 **Python Version**: 3.9+
 

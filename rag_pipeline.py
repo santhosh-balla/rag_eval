@@ -2,7 +2,7 @@
 RAG Pipeline with Groq & RAGAs Evaluation
 ==========================================
 This script builds a baseline RAG (Retrieval-Augmented Generation) pipeline using:
-- Groq API (llama-3.1-70b-versatile) for LLM inference
+- Groq API (llama-3.1-8b-instant) for LLM inference
 - OpenAI embeddings (text-embedding-3-small) for vector embeddings
 - Chroma for local vector storage
 - RAGAs for automated evaluation metrics
@@ -18,17 +18,23 @@ from dotenv import load_dotenv
 
 import pandas as pd
 import numpy as np
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_groq import ChatGroq
-from langchain.schema import HumanMessage
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_core.messages import HumanMessage
+from langchain_core.prompts import PromptTemplate
 
 from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevance, context_precision, context_recall
+from ragas.metrics import faithfulness, context_precision, context_recall
 from datasets import Dataset
+
+# Import for inter-rater reliability (kappa scores)
+from sklearn.metrics import cohen_kappa_score
+try:
+    from statsmodels.stats.inter_rater import fleiss_kappa
+except ImportError:
+    fleiss_kappa = None
 
 # ============================================================================
 # CONFIGURATION & SETUP
@@ -38,18 +44,20 @@ from datasets import Dataset
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not GROQ_API_KEY or not OPENAI_API_KEY:
-    print("❌ ERROR: API keys not found!")
-    print("Please create a .env file with GROQ_API_KEY and OPENAI_API_KEY variables.")
+if not GROQ_API_KEY:
+    print("❌ ERROR: GROQ_API_KEY not found!")
+    print("Please create a .env file with GROQ_API_KEY variable.")
     sys.exit(1)
+
+# Configuration flags
+SKIP_METRICS_EVALUATION = os.getenv("SKIP_METRICS", "false").lower() == "true"
 
 # Paths to domain text files
 DOMAIN_FILES = {
     "java_textbook": "java_textbook.txt",
     "terms_conditions": "terms_conditions.txt",
-    "product_catalog": "product_catalog.txt",
+    "product_catalog": "honeywell_products.txt",
 }
 
 CHROMA_DB_PATH = "./chroma_db"
@@ -116,11 +124,10 @@ def create_chroma_store(reset: bool = False) -> Chroma:
     chunks = splitter.split_text(corpus)
     print(f"✓ Created {len(chunks)} chunks")
     
-    # Initialize OpenAI embeddings
-    print("\n🔐 Initializing OpenAI embeddings (text-embedding-3-small)...")
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=OPENAI_API_KEY
+    # Initialize HuggingFace embeddings (free, local)
+    print("\n🔐 Initializing HuggingFace embeddings...")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2"
     )
     
     # Create Chroma vector store
@@ -139,9 +146,8 @@ def create_chroma_store(reset: bool = False) -> Chroma:
 def load_chroma_store() -> Chroma:
     """Load existing Chroma vector store from disk."""
     print("\n📂 Loading Chroma vector store from disk...")
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=OPENAI_API_KEY
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2"
     )
     vector_store = Chroma(
         persist_directory=CHROMA_DB_PATH,
@@ -170,7 +176,7 @@ def get_rag_response(query: str, vector_store: Chroma) -> Tuple[str, List[str]]:
     
     # Initialize Groq LLM
     llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model="llama-3.1-8b-instant",
         temperature=0.3,
         groq_api_key=GROQ_API_KEY
     )
@@ -190,7 +196,7 @@ Answer:""",
     
     # Retrieve top 5 chunks
     retriever = vector_store.as_retriever(search_kwargs={"k": 5})
-    retrieved_docs = retriever.get_relevant_documents(query)
+    retrieved_docs = retriever.invoke(query)
     
     # Extract context strings
     context_strings = [doc.page_content for doc in retrieved_docs]
@@ -223,33 +229,290 @@ def get_evaluation_dataset() -> List[Dict]:
     """
     evaluation_data = [
         {
-            "question": "What is inheritance in Java and how does it work?",
-            "ground_truth": "Inheritance is a mechanism where a new class (derived class) inherits properties and behaviors from an existing class (base class) using the 'extends' keyword. In Java, a class can directly inherit from only one base class but can implement multiple interfaces. The derived class inherits all non-private members of the base class.",
-            "context_domain": "java_textbook"
-        },
-        {
-            "question": "What are the limitations and disclaimers mentioned in the Terms and Conditions?",
-            "ground_truth": "SoftwareHub provides materials 'as is' without warranties. They disclaim all warranties including merchantability, fitness for a particular purpose, and non-infringement. They are not liable for damages including loss of data or profit, even if notified of possible damage. They do not warrant accuracy, completeness, or currentness of materials.",
-            "context_domain": "terms_conditions"
-        },
-        {
-            "question": "What are the key features offered by CloudHost Business Plan?",
-            "ground_truth": "CloudHost Business Plan includes 500 GB SSD storage, unlimited bandwidth, 24/7 monitoring and incident response, database management for MySQL, PostgreSQL, and MongoDB, and API rate of 1 million requests per month included. It offers 99.99% uptime SLA with automatic load balancing and auto-scaling.",
+            "question": "What are the key features and specifications of the Honeywell Home T4 Pro Programmable Thermostat?",
+            "ground_truth": "The Honeywell Home T4 Pro (TH4110U2005) is a 7-day programmable thermostat with four programmable time periods per day. It features adaptive intelligent recovery that learns how long the HVAC system takes to reach target temperature. It includes compressor protection and is compatible with 24-volt heating/cooling systems only. Temperature range is 40-90°F for heat and 50-99°F for cool. It runs on two AA alkaline batteries and includes keypad lockout with a default unlock password of 1234.",
             "context_domain": "product_catalog"
         },
         {
-            "question": "What access modifiers exist in Java and what do they control?",
-            "ground_truth": "Java provides four access levels: public (accessible from anywhere), protected (accessible within same package and subclasses), default/no modifier (accessible only within same package), and private (accessible only within the same class). These modifiers control the visibility and accessibility of classes, methods, and variables.",
-            "context_domain": "java_textbook"
+            "question": "What are the power requirements and system compatibility for the Honeywell Wi-Fi 7-Day Programmable Thermostat (RTH6500WF)?",
+            "ground_truth": "The Honeywell RTH6500WF Wi-Fi thermostat requires a C (common) wire to supply 24 VAC continuous power and will NOT work on 120/240 volt systems. It has an 1800 mAh lithium-ion battery and connects to the home Wi-Fi network for remote access through the Honeywell Home app. Default energy-saving programs can reduce heating and cooling expenses by as much as 33%. It supports Heat, Cool, Off, and EM HEAT modes for heat pumps with auxiliary heat.",
+            "context_domain": "product_catalog"
         },
         {
-            "question": "What is the price of CodeMaster Pro 2024 and what platforms does it support?",
-            "ground_truth": "CodeMaster Pro 2024 is priced at $99.99 per year. It supports Windows 10+, macOS 10.14+, and Linux (Ubuntu 18.04+). It includes features like AI-powered code completion, cross-platform debugging tools, version control integration, and a plugin ecosystem with 500+ community extensions.",
+            "question": "What is the Honeywell BACnet Fixed Function Thermostat (TB3026B) and what are its communication specifications?",
+            "ground_truth": "The Honeywell TB3026B is a configurable commercial thermostat with 19 pre-loaded applications for fan coil, heat pump, and conventional rooftop HVAC systems. It features built-in temperature and humidity sensors and operates as a fully functioning BACnet controller. It communicates via BACnet MS/TP over EIA-485 twisted-pair at speeds of 9.6, 19.2, 38.4, or 76.8 Kbps. The network supports up to 128 master devices per network and 255 total devices. Maximum segment length is 4000 feet with repeaters required beyond this distance.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What sensor technologies and gas detection ranges does the Honeywell XNX Universal Transmitter support?",
+            "ground_truth": "The Honeywell XNX Universal Transmitter is a high-specification gas transmitter compatible with Honeywell Analytics detectors. It supports three sensor technologies: Electrochemical (EC), Infrared (IR), and Catalytic Bead (MPD). The combustible gas detection range is 0 to 100% LEL/LFL. It offers more than 200 unique configurations and is certified for hazardous areas including Zone 1, 2, 21, 22, and North American Class I and II Division 1 or 2. Operating temperature ranges from -40°C to +65°C depending on sensor type.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What are the output module options available for the Honeywell XNX Universal Transmitter?",
+            "ground_truth": "The Honeywell XNX Universal Transmitter offers the following mutually exclusive output module options: 4-20 mA with HART 6.0 protocol (standard), Relay Module with three user-configurable relays (2 SPCO alarm relays, 1 SPCO fault relay), Modbus Module with isolated RS-485 output for multi-drop Modbus RTU networks, and Foundation Fieldbus Module for multi-drop Foundation Fieldbus H1 network connections. The standard 4-20 mA/HART output is compatible with all optional modules.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What are the specifications and capabilities of the Honeywell Xenon 1902 Cordless Area-Imaging Scanner?",
+            "ground_truth": "The Honeywell Xenon 1902 is a cordless handheld area-imaging barcode scanner using Bluetooth wireless interface. It features an 1800 mAh lithium-ion rechargeable battery capable of up to 50,000 reads per charge. Standby power consumption is 0.5W with input voltage of 5 VDC. The scanner weighs 214 grams, has an IP41 protection rating (protection against objects 1mm or greater and vertically falling water drops), and features a rugged shockproof design.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What temperature control range and system modes does the Honeywell Home T3 Pro Smart Thermostat offer?",
+            "ground_truth": "The Honeywell Home T3 Pro is a programmable thermostat designed for both conventional and heat pump HVAC systems. It provides scheduling capabilities, a backlit display, and simple three-button control. The thermostat is powered by two AA batteries (included) and includes a UWP mounting system with a decorative cover plate (4.72 inches H x 5.9 inches W). It is designed as an entry-level smart home device with straightforward operation suitable for residential applications.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What are the installation requirements and network specifications for the Honeywell BACnet TB3026B?",
+            "ground_truth": "The Honeywell TB3026B requires installation by a trained, experienced service technician with power disconnected before installation. It must be mounted approximately 4 feet above the floor in an area with good air circulation at average temperature, complying with Americans with Disabilities Act requirements. It requires 24 VAC on terminal 1. The network uses shielded twisted-pair cable with characteristic impedance between 100-130 ohms, distributed capacitance less than 30 pF/foot, 18 AWG wire gauge (minimum 22 AWG acceptable), and matched precision terminating resistors (1/4 W, +/-1%, 80-130 ohms) at each segment end.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What is the power source and physical specification for the Honeywell RTH2300/RTH221 Series Programmable Thermostat?",
+            "ground_truth": "The Honeywell RTH2300/RTH221 Series is an entry-level 5-2 day programmable thermostat that is pre-programmed and ready to operate out of the box - users only need to set the time and day. It features a backlight that stays lit for 12 seconds when any button is pressed. The thermostat includes compressor protection that engages when 'Cool On' flashes on the display. It comes with a one-year limited warranty against manufacturing defects (excluding battery). Warranty does not cover removal/reinstallation costs or damage caused by the consumer.",
+            "context_domain": "product_catalog"
+        },
+        {
+            "question": "What are the industrial applications and safety features of the Honeywell XNX Universal Transmitter?",
+            "ground_truth": "The Honeywell XNX Universal Transmitter is designed for industrial applications including upstream and downstream oil and gas, chemical, wastewater, and other industrial settings. The housing is painted LM25 aluminum standard with 316 stainless steel marine-grade coating optional. It has 24 VDC power, weighs 2.8 kg, and has five threaded cable entry ports available as 5x M25 (ATEX/IECEx) or 5x 3/4\" NPT (UL/CSA). It features a 2.5-inch high-resolution backlit LCD display and non-intrusive four-button magnetic interface. Remote sensor option extends up to 50 feet from transmitter with optional wireless capabilities.",
             "context_domain": "product_catalog"
         },
     ]
     
     return evaluation_data
+
+
+# ============================================================================
+# INTER-RATER RELIABILITY (Manual Team Scoring)
+# ============================================================================
+
+def create_manual_scoring_template() -> Dict:
+    """
+    Create a template for manual scoring by multiple raters (1-5 scale).
+    
+    This allows a team of 5 people to independently score each answer
+    and compute Cohen's kappa for inter-rater agreement.
+    
+    Scale:
+    1 = Poor (completely incorrect, irrelevant)
+    2 = Fair (mostly incorrect, some relevance)
+    3 = Good (mostly correct, some issues)
+    4 = Very Good (correct, minor issues)
+    5 = Excellent (completely correct, clear explanation)
+    
+    Returns: Dictionary structure for team ratings
+    """
+    print("\n" + "="*80)
+    print("MANUAL SCORING INSTRUCTIONS FOR TEAM OF 5 RATERS")
+    print("="*80)
+    print("""
+Each rater should independently score each answer on a scale of 1-5:
+    
+    1 = Poor      - Completely incorrect, irrelevant to the question
+    2 = Fair      - Mostly incorrect, some relevance
+    3 = Good      - Mostly correct, may have minor issues
+    4 = Very Good - Correct with minor issues or gaps
+    5 = Excellent - Completely accurate and well-explained
+    
+Team Members:
+    1. Rater 1 (your initials)
+    2. Rater 2 (your initials)
+    3. Rater 3 (your initials)
+    4. Rater 4 (your initials)
+    5. Rater 5 (your initials)
+
+Example output format:
+{
+    "question_1": {
+        "rater_1": 4,
+        "rater_2": 4,
+        "rater_3": 3,
+        "rater_4": 4,
+        "rater_5": 5
+    },
+    ...
+}
+    """)
+    
+    # Template for 10 questions with 5 raters
+    scoring_template = {
+        f"question_{i}": {
+            "rater_1": None,
+            "rater_2": None,
+            "rater_3": None,
+            "rater_4": None,
+            "rater_5": None
+        }
+        for i in range(1, 11)
+    }
+    
+    return scoring_template
+
+
+def calculate_kappa_scores(team_ratings: Dict) -> Dict:
+    """
+    Calculate inter-rater reliability using Cohen's Kappa and Fleiss' Kappa.
+    
+    Args:
+        team_ratings: Dictionary with ratings from 5 raters per question
+        
+    Returns:
+        Dictionary with kappa scores and agreement statistics
+        
+    Kappa Interpretation:
+    - 0.81-1.00: Almost Perfect Agreement
+    - 0.61-0.80: Substantial Agreement
+    - 0.41-0.60: Moderate Agreement
+    - 0.21-0.40: Fair Agreement
+    - 0.00-0.20: Slight Agreement
+    - < 0.00: Poor/No Agreement
+    """
+    
+    print("\n" + "="*80)
+    print("INTER-RATER RELIABILITY ANALYSIS (KAPPA SCORES)")
+    print("="*80)
+    
+    ratings_array = []
+    questions_list = []
+    
+    # Convert ratings to array format: (n_questions, n_raters)
+    for question, raters_dict in team_ratings.items():
+        ratings = [
+            raters_dict.get("rater_1"),
+            raters_dict.get("rater_2"),
+            raters_dict.get("rater_3"),
+            raters_dict.get("rater_4"),
+            raters_dict.get("rater_5")
+        ]
+        
+        # Skip if any rating is missing
+        if None in ratings:
+            continue
+            
+        ratings_array.append(ratings)
+        questions_list.append(question)
+    
+    if not ratings_array:
+        print("⚠️  No complete ratings available for kappa calculation")
+        return None
+    
+    ratings_array = np.array(ratings_array)
+    
+    results = {
+        "questions_scored": len(questions_list),
+        "pairwise_kappas": {},
+        "fleiss_kappa": None
+    }
+    
+    # Calculate pairwise Cohen's Kappa between each pair of raters
+    rater_names = ["Rater 1", "Rater 2", "Rater 3", "Rater 4", "Rater 5"]
+    print("\n📊 Pairwise Cohen's Kappa Scores (Agreement between two raters):")
+    print("-" * 80)
+    
+    for i in range(5):
+        for j in range(i+1, 5):
+            rater_i_scores = ratings_array[:, i]
+            rater_j_scores = ratings_array[:, j]
+            
+            try:
+                kappa = cohen_kappa_score(rater_i_scores, rater_j_scores)
+                pair_name = f"{rater_names[i]} vs {rater_names[j]}"
+                results["pairwise_kappas"][pair_name] = round(kappa, 4)
+                
+                # Interpret agreement level
+                if kappa >= 0.81:
+                    agreement_level = "Almost Perfect"
+                elif kappa >= 0.61:
+                    agreement_level = "Substantial"
+                elif kappa >= 0.41:
+                    agreement_level = "Moderate"
+                elif kappa >= 0.21:
+                    agreement_level = "Fair"
+                elif kappa >= 0:
+                    agreement_level = "Slight"
+                else:
+                    agreement_level = "Poor"
+                
+                print(f"  {pair_name}: {kappa:.4f} ({agreement_level})")
+            except Exception as e:
+                print(f"  Error calculating {rater_names[i]} vs {rater_names[j]}: {e}")
+    
+    # Calculate Fleiss' Kappa (overall agreement among all 5 raters)
+    if fleiss_kappa is not None:
+        print("\n📊 Fleiss' Kappa Score (Overall agreement among all 5 raters):")
+        print("-" * 80)
+        try:
+            # Convert to format required by fleiss_kappa: (n_subjects, n_categories)
+            # We need to convert numerical ratings to category counts
+            max_rating = 5
+            n_questions = ratings_array.shape[0]
+            
+            # Create contingency table
+            contingency_table = np.zeros((n_questions, max_rating))
+            for i in range(n_questions):
+                for rating in ratings_array[i, :]:
+                    contingency_table[i, int(rating)-1] += 1
+            
+            fleiss_k = fleiss_kappa(contingency_table)
+            results["fleiss_kappa"] = round(fleiss_k, 4)
+            
+            if fleiss_k >= 0.81:
+                agreement_level = "Almost Perfect"
+            elif fleiss_k >= 0.61:
+                agreement_level = "Substantial"
+            elif fleiss_k >= 0.41:
+                agreement_level = "Moderate"
+            elif fleiss_k >= 0.21:
+                agreement_level = "Fair"
+            elif fleiss_k >= 0:
+                agreement_level = "Slight"
+            else:
+                agreement_level = "Poor"
+            
+            print(f"  Fleiss' Kappa: {fleiss_k:.4f} ({agreement_level})")
+            print(f"  Questions Evaluated: {n_questions}/10")
+            
+        except Exception as e:
+            print(f"  Error calculating Fleiss' Kappa: {e}")
+    else:
+        print("\n⚠️  statsmodels not installed. Install with: pip install statsmodels")
+    
+    # Calculate average rating per question
+    print("\n📈 Average Rating per Question:")
+    print("-" * 80)
+    avg_ratings = {}
+    for idx, question in enumerate(questions_list):
+        avg_rating = np.mean(ratings_array[idx, :])
+        std_rating = np.std(ratings_array[idx, :])
+        avg_ratings[question] = {"avg": round(avg_rating, 2), "std": round(std_rating, 2)}
+        print(f"  {question}: {avg_rating:.2f} ± {std_rating:.2f}")
+    
+    results["average_ratings"] = avg_ratings
+    
+    return results
+
+
+def save_ratings_to_csv(team_ratings: Dict, filename: str = "team_ratings.csv"):
+    """Save team ratings to CSV file for easier sharing and management."""
+    df_data = []
+    
+    for question, raters_dict in team_ratings.items():
+        row = {
+            "Question": question,
+            "Rater_1": raters_dict.get("rater_1"),
+            "Rater_2": raters_dict.get("rater_2"),
+            "Rater_3": raters_dict.get("rater_3"),
+            "Rater_4": raters_dict.get("rater_4"),
+            "Rater_5": raters_dict.get("rater_5"),
+        }
+        df_data.append(row)
+    
+    df = pd.DataFrame(df_data)
+    df.to_csv(filename, index=False)
+    print(f"\n✓ Team ratings saved to {filename}")
+    return df
+
 
 
 # ============================================================================
@@ -272,7 +535,7 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
     
     # Initialize Groq as the judge LLM for RAGAs
     judge_llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model="llama-3.1-8b-instant",
         temperature=0,
         groq_api_key=GROQ_API_KEY
     )
@@ -305,27 +568,32 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
         "ground_truth": ground_truths
     })
     
+    # Skip metrics evaluation if flag is set
+    if SKIP_METRICS_EVALUATION:
+        print("\n⏭️  Skipping RAGAs metrics evaluation (SKIP_METRICS=true)")
+        return None, questions, answers, contexts
+    
     # Configure RAGAs metrics with Groq judge
-    print("\n📊 Computing RAGAs metrics (Faithfulness, Answer Relevance, Context Precision, Context Recall)...")
+    print("\n📊 Computing RAGAs metrics (Faithfulness, Context Precision, Context Recall)...")
+    print("⚠️  Using simplified metrics to work with smaller LLM models (n=1 only)")
     
     # Create metric instances configured with Groq
-    # Note: RAGAs metrics can be configured with custom LLMs
+    # Note: Removed 'answer_relevancy' as it requires n>1 sampling unsupported by small models
     metrics_to_evaluate = [
-        faithfulness,
-        answer_relevance,
-        context_precision,
-        context_recall
+        faithfulness,           # ✅ Works with n=1
+        context_precision,      # ✅ Works with n=1
+        context_recall          # ✅ Works with n=1
+        # answer_relevancy     # ❌ Removed - causes "n must be at most 1" error
     ]
     
     try:
-        # Run evaluation
+        # Run evaluation with simplified settings for smaller models
         results = evaluate(
             dataset=rag_eval_dataset,
             metrics=metrics_to_evaluate,
             llm=judge_llm,
-            embeddings=OpenAIEmbeddings(
-                model="text-embedding-3-small",
-                openai_api_key=OPENAI_API_KEY
+            embeddings=HuggingFaceEmbeddings(
+                model_name="all-MiniLM-L6-v2"
             ),
             batch_size=1  # Process one at a time to avoid rate limits
         )
@@ -334,8 +602,11 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
         return results, questions, answers, contexts
     
     except Exception as e:
-        print(f"⚠️  Error during RAGAs evaluation: {e}")
-        print("Attempting fallback evaluation...")
+        print(f"⚠️  Error during RAGAs evaluation: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        print("\nNote: This can happen with smaller models that have limited token budgets.")
+        print("Returning partial results without metrics...")
         return None, questions, answers, contexts
 
 
@@ -348,7 +619,7 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
     Print formatted evaluation results and sample Q&A.
     
     Args:
-        results: RAGAs evaluation results dictionary.
+        results: RAGAs evaluation results dictionary (or None if metrics skipped).
         questions: List of questions evaluated.
         answers: List of generated answers.
         contexts: List of retrieved context strings for each query.
@@ -357,42 +628,74 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
     print("RAG PIPELINE EVALUATION RESULTS")
     print("="*80)
     
+    # Print metrics if available
     if results:
-        # Extract metric scores
+        print("\n✅ RAGAS AUTOMATED METRICS")
+        print("-" * 80)
+        # Extract metric scores from RAGAs EvaluationResult object
         try:
-            metrics_dict = {
-                "Faithfulness": results.get("faithfulness", 0),
-                "Answer Relevance": results.get("answer_relevance", 0),
-                "Context Precision": results.get("context_precision", 0),
-                "Context Recall": results.get("context_recall", 0)
-            }
+            # RAGAs returns an EvaluationResult object with metric attributes
+            metrics_dict = {}
             
-            # Handle case where results might be aggregated differently
-            if isinstance(results, dict) and "scores" in results:
-                metrics_dict = results["scores"]
+            # Try to access as attributes first (RAGAs EvaluationResult object)
+            if hasattr(results, 'faithfulness'):
+                metrics_dict["Faithfulness"] = float(results.faithfulness) if results.faithfulness is not None else 0
+                metrics_dict["Context Precision"] = float(results.context_precision) if results.context_precision is not None else 0
+                metrics_dict["Context Recall"] = float(results.context_recall) if results.context_recall is not None else 0
+                # answer_relevancy removed - not computed
+            # Fallback: treat as dictionary
+            elif isinstance(results, dict):
+                metrics_dict = {
+                    "Faithfulness": results.get("faithfulness", 0) or 0,
+                    "Context Precision": results.get("context_precision", 0) or 0,
+                    "Context Recall": results.get("context_recall", 0) or 0
+                }
             
-            # Create metrics table
-            metrics_df = pd.DataFrame([metrics_dict])
-            
-            print("\n📈 RAGAs Metrics Table:")
-            print("-" * 80)
-            print(metrics_df.to_string())
-            print("-" * 80)
-            
-            # Calculate and print average score
-            avg_score = np.mean(list(metrics_dict.values()))
-            print(f"\n📊 Average Score: {avg_score:.4f}")
+            # Create metrics dataframe and display
+            if metrics_dict:
+                metrics_df = pd.DataFrame([metrics_dict])
+                
+                print("\n📈 RAGAs Metrics Table:")
+                print("-" * 80)
+                print(metrics_df.to_string())
+                print("-" * 80)
+                
+                # Calculate and print average score (excluding NaN values)
+                valid_scores = [v for v in metrics_dict.values() if not np.isnan(v)]
+                if valid_scores:
+                    avg_score = np.mean(valid_scores)
+                    print(f"\n📊 Average Score: {avg_score:.4f}")
+                    print(f"📝 Note: NaN values indicate metrics that couldn't be computed with the current model")
         
         except Exception as e:
             print(f"⚠️  Could not format metrics table: {e}")
             print(f"Raw results: {results}")
+            # Try to print raw results if available
+            if hasattr(results, '__dict__'):
+                print(f"Results attributes: {results.__dict__}")
     else:
-        print("⚠️  No evaluation results available (check API keys and rate limits)")
+        print("\n⏭️  RAGAs Metrics Skipped (SKIP_METRICS=true)")
+        print("-" * 80)
+        print("📌 To enable automated metrics evaluation:")
+        print("   1. Set SKIP_METRICS=false in .env file")
+        print("   2. Or run: export SKIP_METRICS=false && python rag_pipeline.py")
+        print("   3. Ensure GROQ_API_KEY is set with sufficient quota")
+    
+    # Print evaluation summary (always show this)
+    if questions and answers:
+        print("\n" + "="*80)
+        print("📊 EVALUATION SUMMARY")
+        print("="*80)
+        print(f"✓ Total Questions Evaluated: {len(questions)}")
+        print(f"✓ Answers Generated: {len(answers)}")
+        print(f"✓ Context Chunks Retrieved: {sum(len(c) for c in contexts)}")
+        if contexts:
+            print(f"✓ Average Context Chunks per Query: {sum(len(c) for c in contexts) / len(contexts):.1f}")
     
     # Print sample query with answer and contexts
     if questions and answers and contexts:
         print("\n" + "="*80)
-        print("SAMPLE QUERY DEMO")
+        print("SAMPLE QUERY DEMO (Query 1 of {})".format(len(questions)))
         print("="*80)
         
         sample_idx = 0  # First query as demo
@@ -409,6 +712,16 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
             print(f"\n[Chunk {i}]")
             print(context[:300] + ("..." if len(context) > 300 else ""))
         print("-" * 80)
+        
+        # Show how to enable manual scoring for team evaluation
+        print("\n" + "="*80)
+        print("📋 NEXT STEPS: Manual Team Evaluation")
+        print("="*80)
+        print("To conduct inter-rater reliability analysis with your team:")
+        print("  1. Run: python QUICK_START.py")
+        print("  2. Or use: from kappa_scoring import calculate_kappa_scores")
+        print("  3. See: SCORING_README.md for complete workflow")
+        print("="*80)
 
 
 # ============================================================================
@@ -420,6 +733,11 @@ def main():
     print("\n" + "="*80)
     print(" RAG PIPELINE WITH GROQ & RAGAs EVALUATION")
     print("="*80)
+    
+    results = None
+    questions = []
+    answers = []
+    contexts = []
     
     try:
         # Step 1: Create/Load Vector Store
@@ -438,22 +756,34 @@ def main():
         # Step 3: Evaluate RAG pipeline
         results, questions, answers, contexts = evaluate_rag_pipeline(vector_store, eval_data)
         
-        # Step 4: Print results
-        print_results(results, questions, answers, contexts)
-        
-        print("\n" + "="*80)
-        print(" ✅ Pipeline evaluation complete!")
-        print("="*80 + "\n")
-    
     except KeyboardInterrupt:
         print("\n\n⏹️  Process interrupted by user")
+        # Still print partial results if any
+        if questions or answers:
+            print_results(results, questions, answers, contexts)
         sys.exit(0)
     
     except Exception as e:
-        print(f"\n❌ Error during pipeline execution: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"\n⚠️  Error during pipeline execution: {type(e).__name__}")
+        print(f"   {e}\n")
+        
+        # Print partial results if we have any
+        if questions or answers:
+            print("\n📌 Showing partial results (some queries may have failed)...")
+            print_results(results, questions, answers, contexts)
+        else:
+            print("   No results available (error occurred early in pipeline)")
+            import traceback
+            traceback.print_exc()
+        
         sys.exit(1)
+    
+    # Step 4: Print results
+    print_results(results, questions, answers, contexts)
+    
+    print("\n" + "="*80)
+    print(" ✅ Pipeline evaluation complete!")
+    print("="*80 + "\n")
 
 
 if __name__ == "__main__":

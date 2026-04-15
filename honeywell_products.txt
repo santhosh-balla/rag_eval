@@ -1,0 +1,105 @@
+Honeywell Product Catalog - Building Technologies, Sensing & Safety
+
+PRODUCT CATEGORY: HOME THERMOSTATS
+
+Product ID: HW-TH-T4PRO
+Name: Honeywell Home T4 Pro Programmable Thermostat (TH4110U2005)
+Description: 7-day programmable thermostat with four programmable time periods per day and separate weekday/weekend schedules. Features adaptive intelligent recovery that learns how long the HVAC system takes to reach a target temperature and turns on heating or cooling early so the home is comfortable at the scheduled time. Includes compressor protection that forces a multi-minute delay before restart to prevent damage.
+Power: Two AA alkaline batteries (recommended); low-battery icon appears approximately two months before replacement is required. When battery power is critically low, only the BATT indicator, alert icon, and battery icon remain visible.
+System Compatibility: 24 volt heating and cooling systems only. NOT compatible with 120/240 volt line voltage systems.
+Temperature Range:
+- Heat: 40 F to 90 F (4.5 C to 32 C)
+- Cool: 50 F to 99 F (10 C to 37 C)
+System Modes: Heat, Cool, Off, and Emergency Heat (TH4210U only)
+Fan Modes: Auto (fan runs only when heating or cooling is active) and On (fan runs continuously)
+Keypad Lockout: OFF (unlocked), PART (temperature changes allowed only), ON (no access). Unlock password is 1234.
+Package Includes: T4 Pro thermostat, UWP mounting system, decorative cover plate, screws and anchors, two AA batteries, literature.
+
+Product ID: HW-TH-T3PRO
+Name: Honeywell Home T3 Pro Smart Thermostat
+Description: Programmable thermostat designed for conventional and heat pump HVAC systems. Provides scheduling, backlit display, and simple three-button control.
+Decorative Cover Plate Dimensions: 4.72 in H x 5.9 in W (120 mm H x 150 mm W)
+Power: Two AA batteries included
+Package Includes: T3 Pro thermostat, UWP mounting system, small decorative cover plate, screws and anchors, two AA batteries.
+
+Product ID: HW-TH-RTH2300
+Name: Honeywell RTH2300/RTH221 Series Programmable Thermostat
+Description: Entry-level 5-2 day programmable thermostat pre-programmed and ready to operate out of the box; user only needs to set the time and day. Backlight stays lit for 12 seconds when any button is pressed. Compressor protection engages when "Cool On" flashes on the display.
+Warranty: One-year limited warranty against manufacturing defects, excluding the battery. Honeywell will repair or replace at its option. Warranty does not cover removal or reinstallation costs and does not apply to damage caused while in the consumer's possession. For warranty service in the US, contact Honeywell Customer Relations at 1-800-468-1502 or write to 1985 Douglas Dr, Golden Valley, MN 55422.
+Copyright: 2012 Honeywell International Inc.
+
+Product ID: HW-TH-RTH6500WF
+Name: Honeywell Wi-Fi 7-Day Programmable Thermostat (RTH6500WF / RTH65801006)
+Description: Wi-Fi connected programmable thermostat with remote access through the Honeywell Home app via a Comfort account. Pre-set with energy-saving programs for four time periods; default settings can reduce heating and cooling expenses by as much as 33% when used as directed (savings vary by region and usage).
+Power Requirement: Requires a C (common) wire to supply 24 VAC power to the thermostat. Many older mechanical or battery-only thermostats do not have a C wire; check wifithermostat.com for adapter guidance.
+System Modes: Heat, Cool, Off, EM HEAT (for heat pumps with auxiliary heat; compressor is locked out in this mode)
+Setup Process: Install thermostat, connect to home Wi-Fi network, register online for remote access. During setup the thermostat broadcasts an SSID in the form "NewThermostat_123456" which the user connects to from a phone or computer.
+Safety Notice: Contains a lithium battery that may contain perchlorate material. Special handling may apply.
+Voltage Compatibility: 24 VAC systems only; will NOT work on 120/240 volt systems.
+
+PRODUCT CATEGORY: COMMERCIAL BUILDING CONTROLS
+
+Product ID: HW-CB-TB3026B
+Name: Honeywell BACnet Fixed Function Thermostat (TB3026B)
+Description: Configurable commercial thermostat with 19 pre-loaded applications for fan coil, heat pump, and conventional rooftop HVAC systems. Communicating intelligent sensor-controller with built-in temperature and humidity sensors. Operates as a fully functioning BACnet controller over an MS/TP LAN for integration with building automation systems. A wireless sensor variant (TB3026B-W) is also available.
+Communications: BACnet MS/TP over EIA-485 twisted-pair. Each unit exerts 1/4 unit load on the MS/TP LAN.
+Transmission Speeds: 9.6, 19.2, 38.4, or 76.8 Kbps (configured at the global controller)
+Network Topology: Bus (daisy chain)
+Maximum Segment Length: 4000 ft (1071 m) using recommended cable; repeaters required beyond this distance, with a maximum of three repeaters between any two devices.
+Maximum Devices: 128 master devices maximum per network; 255 total devices (master plus slave) overall.
+Cabling Requirements: Shielded twisted-pair with characteristic impedance between 100 and 130 ohms. Distributed capacitance between conductors must be less than 30 pF/foot (100 pF/m).
+Terminating Resistors: Matched precision resistors, 1/4 W, +/-1%, 80-130 ohms, wired across MS/TP+ and MS/TP- at each end of the segment.
+Installation Height: Mount approximately 4 ft (1.2 m) above the floor in an area with good air circulation at average temperature. Confirm mounting height meets Americans with Disabilities Act requirements.
+Wire Gauge: Maximum and recommended 18 AWG; do not use wire smaller than 22 AWG.
+Power: 24 VAC on terminal 1; a factory-installed jumper between pins 1 and 2 supplies 24 VAC to relays BO-1, BO-3, and BO-4.
+Installation Warning: Installer must be a trained, experienced service technician. Disconnect power supply before installation to avoid electrical shock or equipment damage.
+
+PRODUCT CATEGORY: INDUSTRIAL GAS DETECTION
+
+Product ID: HW-GD-XNX
+Name: Honeywell XNX Universal Transmitter
+Description: A high-specification universal gas transmitter compatible with a wide range of Honeywell Analytics local or remote gas detectors for flammable, toxic, and oxygen gas hazards. Uses a common platform with modular input and output options. Offers more than 200 unique configurations and is certified for hazardous areas including Zone 1 and 2, Zone 21 and 22, and North American Class I and II Division 1 or 2.
+Supported Sensor Technologies: Electrochemical (EC), Infrared (IR), and Catalytic Bead (MPD)
+Combustible Gas Detection Range: 0 to 100% LEL/LFL
+Housing Material: Painted LM25 aluminum standard; 316 stainless steel with marine-grade coating optional
+Operating Temperature: -40 C to +65 C (-40 F to +150 F), depending on sensor type. Accuracy between -20 C and -40 C is +/- 30% of applied gas. Continuous operation at temperatures below -20 C for more than 12 hours may cause sensor deterioration.
+Operating Humidity: 20 to 90% relative humidity, non-condensing
+Dimensions: 160 mm x 197 mm x 114 mm (compact); L370 mm x W280 mm x D180 mm with flow housing
+Weight: 2.8 kg (LM25 aluminum alloy)
+Power: 24 VDC nominal
+Output Signal: 4-20 mA with HART 6.0 protocol (standard)
+Optional Output Modules (mutually exclusive with each other but compatible with 4-20mA/HART):
+- Relay Module: Three user-configurable relays (2 x SPCO alarm relays, 1 x SPCO fault relay), SPDT, factory-installed in display module
+- Modbus Module: Isolated RS-485 output for connection to multi-drop Modbus RTU networks
+- Foundation Fieldbus Module: Digital communications interface for multi-drop Foundation Fieldbus H1 network
+Cable Entries: Five threaded ports, available as 5 x M25 (ATEX/IECEx) or 5 x 3/4" NPT (UL/CSA)
+Display: 2.5 inch high-resolution custom backlit LCD dot matrix showing gas reading, gas name and units, fault and alarm status, large numeric concentration or LEL display, and bar graph
+User Interface: Non-intrusive four-button magnetic interface (operated with an external magnetic wand, no enclosure opening required)
+Remote Sensor Option: Up to 50 ft (15.2 m) from the transmitter for catalytic bead and toxic sensors
+Industry Applications: Upstream and downstream oil and gas, chemical, wastewater, and other industrial settings
+Standard Supply: XNX transmitter with integral wall mounting lugs, five cable entries, magnetic wand/screwdriver, Allen key, three blanking plugs, quick start guide, and manual CD. MPD or XNX EC sensors are fitted to the bottom entry if ordered with the unit; other sensors are supplied separately.
+Ordering: To order XNX parts, call Honeywell at 800-538-0363.
+
+PRODUCT CATEGORY: BARCODE SCANNERS
+
+Product ID: HW-SC-XENON1902
+Name: Honeywell Xenon 1902 Cordless Area-Imaging Scanner
+Description: Cordless handheld area-imaging barcode scanner using Bluetooth as the standard wireless interface.
+Battery: 1800 mAh lithium-ion, rechargeable
+Input Voltage: 5 VDC
+Reads per Charge: Up to 50,000
+Standby Power Consumption: 0.5 W
+Weight: 214 g
+Protection Rating: IP41 (protection against solid foreign objects 1 mm or greater and against vertically falling water drops)
+Ruggedness: Shockproof design
+
+PRODUCT CATEGORY: SECURITY SYSTEMS
+
+Product ID: HW-SEC-VISTA20P
+Name: Honeywell VISTA-20P Security System Control Panel
+Description: Widely deployed commercial and residential security control panel requiring precise programming for optimal performance. The official programming manual covers data field programming, output device programming, and zone type definitions.
+Documentation: Comprehensive Programming Guide published by Honeywell covering all aspects of VISTA-20P configuration.
+Typical Deployment: Small-to-medium commercial and residential intrusion detection.
+
+COMPANY INFO:
+Honeywell International Inc. is a diversified technology and manufacturing company headquartered in the United States, with business units including Building Technologies, Safety and Productivity Solutions, Honeywell Analytics, and Honeywell Home. Products listed in this catalog are drawn from publicly available Honeywell documentation including installation manuals, spec sheets, and datasheets. For warranty claims on consumer thermostats in the US, contact Honeywell Customer Relations at 1-800-468-1502 or write to 1985 Douglas Dr, Golden Valley, MN 55422. For XNX part ordering, call 800-538-0363. Copyright Honeywell International Inc.
