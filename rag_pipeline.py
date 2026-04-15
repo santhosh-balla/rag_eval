@@ -2,8 +2,8 @@
 RAG Pipeline with Groq & RAGAs Evaluation
 ==========================================
 This script builds a baseline RAG (Retrieval-Augmented Generation) pipeline using:
-- Groq API (llama-3.1-70b-versatile) for LLM inference
-- OpenAI embeddings (text-embedding-3-small) for vector embeddings
+- Groq API (llama-3.3-70b-versatile by default) for LLM inference
+- Local HuggingFace embeddings (sentence-transformers/all-MiniLM-L6-v2) for vector embeddings
 - Chroma for local vector storage
 - RAGAs for automated evaluation metrics
 
@@ -13,21 +13,46 @@ Domain data includes: Java Textbook, Terms & Conditions, and Product Catalog.
 import os
 import sys
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 from dotenv import load_dotenv
 
 import pandas as pd
 import numpy as np
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    # Backward compatibility for older langchain versions.
+    from importlib import import_module
+    RecursiveCharacterTextSplitter = import_module("langchain.text_splitter").RecursiveCharacterTextSplitter
+
+from langchain_huggingface import HuggingFaceEmbeddings
+from importlib import import_module
+
+try:
+    Chroma = import_module("langchain_chroma").Chroma
+except ImportError:
+    try:
+        Chroma = import_module("langchain_community.vectorstores").Chroma
+    except ImportError:
+        Chroma = import_module("langchain.vectorstores").Chroma
+
 from langchain_groq import ChatGroq
-from langchain.schema import HumanMessage
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+
+try:
+    from langchain_core.messages import HumanMessage
+except ImportError:
+    from importlib import import_module
+    HumanMessage = import_module("langchain.schema").HumanMessage
+
+try:
+    from langchain_core.prompts import PromptTemplate
+except ImportError:
+    from importlib import import_module
+    PromptTemplate = import_module("langchain.prompts").PromptTemplate
 
 from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevance, context_precision, context_recall
+from ragas.metrics.collections import faithfulness, answer_relevancy, context_precision, context_recall
 from datasets import Dataset
 
 # ============================================================================
@@ -38,11 +63,11 @@ from datasets import Dataset
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-if not GROQ_API_KEY or not OPENAI_API_KEY:
-    print("❌ ERROR: API keys not found!")
-    print("Please create a .env file with GROQ_API_KEY and OPENAI_API_KEY variables.")
+if not GROQ_API_KEY:
+    print("❌ ERROR: GROQ API key not found!")
+    print("Please create a .env file with GROQ_API_KEY variable.")
     sys.exit(1)
 
 # Paths to domain text files
@@ -53,6 +78,12 @@ DOMAIN_FILES = {
 }
 
 CHROMA_DB_PATH = "./chroma_db"
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+
+def get_embedding_model() -> HuggingFaceEmbeddings:
+    """Create local embeddings model used by retrieval and RAGAs metrics."""
+    return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
 # ============================================================================
 # PHASE 1: VECTOR STORE SETUP
@@ -63,29 +94,29 @@ def load_domain_documents() -> str:
     Load and concatenate all domain text files into a single corpus.
     Returns concatenated text from all domain files.
     """
-    print("\n📄 Loading domain documents...")
+    print("\nLoading domain documents...")
     corpus = ""
-    
+
     for domain_name, filename in DOMAIN_FILES.items():
         filepath = Path(filename)
         if not filepath.exists():
-            print(f"⚠️  Warning: {filename} not found. Skipping {domain_name}.")
+            print(f"Warning: {filename} not found. Skipping {domain_name}.")
             continue
-        
+
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
             corpus += f"\n--- {domain_name.upper()} ---\n{content}\n"
-            print(f"✓ Loaded: {domain_name} ({len(content)} characters)")
-    
+            print(f"Loaded: {domain_name} ({len(content)} characters)")
+
     if not corpus:
-        print("❌ No domain documents found!")
+        print("No domain documents found!")
         sys.exit(1)
-    
-    print(f"✓ Total corpus size: {len(corpus)} characters")
+
+    print(f"Total corpus size: {len(corpus)} characters")
     return corpus
 
 
-def create_chroma_store(reset: bool = False) -> Chroma:
+def create_chroma_store(reset: bool = False) -> Any:
     """
     Create and populate a Chroma vector store with domain documents.
     
@@ -95,67 +126,80 @@ def create_chroma_store(reset: bool = False) -> Chroma:
     Returns:
         Chroma vector store instance.
     """
-    print("\n🔧 Setting up Chroma vector store...")
+    print("\nSetting up Chroma vector store...")
     
     # Reset if requested
     if reset and Path(CHROMA_DB_PATH).exists():
         import shutil
         shutil.rmtree(CHROMA_DB_PATH)
-        print("✓ Existing Chroma database cleared")
+        print("Existing Chroma database cleared")
     
     # Load domain documents
     corpus = load_domain_documents()
     
     # Split text into chunks
-    print("\n✂️  Splitting corpus into chunks...")
+    print("\nSplitting corpus into chunks...")
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
         separators=["\n\n", "\n", ". ", " ", ""]
     )
     chunks = splitter.split_text(corpus)
-    print(f"✓ Created {len(chunks)} chunks")
+    print(f"Created {len(chunks)} chunks")
     
-    # Initialize OpenAI embeddings
-    print("\n🔐 Initializing OpenAI embeddings (text-embedding-3-small)...")
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=OPENAI_API_KEY
-    )
+    # Initialize local HuggingFace embeddings
+    print(f"\nInitializing local embeddings ({EMBEDDING_MODEL_NAME})...")
+    embeddings = get_embedding_model()
     
     # Create Chroma vector store
-    print("\n💾 Creating Chroma vector store...")
+    print("\nCreating Chroma vector store...")
     vector_store = Chroma.from_texts(
         texts=chunks,
         embedding=embeddings,
         persist_directory=CHROMA_DB_PATH,
         metadatas=[{"chunk_id": i} for i in range(len(chunks))]
     )
-    print(f"✓ Vector store created with {len(chunks)} chunks")
+    if hasattr(vector_store, "persist"):
+        vector_store.persist()
+    print(f"Vector store created with {len(chunks)} chunks")
     
     return vector_store
 
 
-def load_chroma_store() -> Chroma:
+def load_chroma_store() -> Any:
     """Load existing Chroma vector store from disk."""
-    print("\n📂 Loading Chroma vector store from disk...")
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=OPENAI_API_KEY
-    )
+    print("\nLoading Chroma vector store from disk...")
+    embeddings = get_embedding_model()
     vector_store = Chroma(
         persist_directory=CHROMA_DB_PATH,
         embedding_function=embeddings
     )
-    print(f"✓ Vector store loaded")
+    print("Vector store loaded")
     return vector_store
+
+
+def get_or_create_chroma_store() -> Any:
+    """Load Chroma, but rebuild it if the persisted collection is empty."""
+    if Path(CHROMA_DB_PATH).exists():
+        vector_store = load_chroma_store()
+        try:
+            if vector_store._collection.count() == 0:
+                print("Existing Chroma collection is empty. Rebuilding from source documents...")
+                return create_chroma_store(reset=False)
+        except Exception:
+            print("Could not inspect Chroma collection. Rebuilding from source documents...")
+            return create_chroma_store(reset=False)
+        return vector_store
+
+    print("\nCreating new Chroma vector store...")
+    return create_chroma_store(reset=True)
 
 
 # ============================================================================
 # PHASE 2: RAG PIPELINE
 # ============================================================================
 
-def get_rag_response(query: str, vector_store: Chroma) -> Tuple[str, List[str]]:
+def get_rag_response(query: str, vector_store: Any) -> Tuple[str, List[str]]:
     """
     Execute RAG pipeline: retrieve top 5 chunks and generate answer using Groq.
     
@@ -166,11 +210,11 @@ def get_rag_response(query: str, vector_store: Chroma) -> Tuple[str, List[str]]:
     Returns:
         Tuple of (generated_answer, list_of_retrieved_contexts)
     """
-    print(f"\n🔍 Processing query: '{query}'")
+    print(f"\nProcessing query: '{query}'")
     
     # Initialize Groq LLM
     llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model=GROQ_MODEL,
         temperature=0.3,
         groq_api_key=GROQ_API_KEY
     )
@@ -188,15 +232,18 @@ Answer:""",
         input_variables=["context", "question"]
     )
     
-    # Retrieve top 5 chunks
+    # Retrieve top 5 chunks (LangChain v1 uses `invoke`; older versions use `get_relevant_documents`).
     retriever = vector_store.as_retriever(search_kwargs={"k": 5})
-    retrieved_docs = retriever.get_relevant_documents(query)
+    try:
+        retrieved_docs = retriever.invoke(query)
+    except AttributeError:
+        retrieved_docs = retriever.get_relevant_documents(query)
     
     # Extract context strings
     context_strings = [doc.page_content for doc in retrieved_docs]
     context_text = "\n---\n".join(context_strings)
     
-    print(f"✓ Retrieved {len(context_strings)} chunks")
+    print(f"Retrieved {len(context_strings)} chunks")
     
     # Generate answer using Groq
     prompt = rag_prompt.format(context=context_text, question=query)
@@ -204,7 +251,7 @@ Answer:""",
     response = llm.invoke([message])
     answer = response.content
     
-    print(f"✓ Answer generated (length: {len(answer)} chars)")
+    print(f"Answer generated (length: {len(answer)} chars)")
     
     return answer, context_strings
 
@@ -256,7 +303,7 @@ def get_evaluation_dataset() -> List[Dict]:
 # PHASE 4: RAGAs EVALUATION
 # ============================================================================
 
-def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> Dict:
+def evaluate_rag_pipeline(vector_store: Any, evaluation_data: List[Dict]) -> Dict:
     """
     Evaluate RAG pipeline using RAGAs metrics.
     Metrics: Faithfulness, Answer Relevance, Context Precision, Context Recall.
@@ -268,11 +315,11 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
     Returns:
         Dictionary with RAGAs evaluation scores.
     """
-    print("\n🧪 Evaluating RAG pipeline with RAGAs...")
+    print("\nEvaluating RAG pipeline with RAGAs...")
     
     # Initialize Groq as the judge LLM for RAGAs
     judge_llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model=GROQ_MODEL,
         temperature=0,
         groq_api_key=GROQ_API_KEY
     )
@@ -295,7 +342,7 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
         contexts.append(retrieved_contexts)  # RAGAs expects list of context strings
         ground_truths.append(gt)
     
-    print(f"✓ Generated {len(answers)} answers")
+        print(f"Generated {len(answers)} answers")
     
     # Create RAGAs dataset
     rag_eval_dataset = Dataset.from_dict({
@@ -306,13 +353,13 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
     })
     
     # Configure RAGAs metrics with Groq judge
-    print("\n📊 Computing RAGAs metrics (Faithfulness, Answer Relevance, Context Precision, Context Recall)...")
+    print("\nComputing RAGAs metrics (Faithfulness, Answer Relevance, Context Precision, Context Recall)...")
     
     # Create metric instances configured with Groq
     # Note: RAGAs metrics can be configured with custom LLMs
     metrics_to_evaluate = [
         faithfulness,
-        answer_relevance,
+        answer_relevancy,
         context_precision,
         context_recall
     ]
@@ -323,18 +370,15 @@ def evaluate_rag_pipeline(vector_store: Chroma, evaluation_data: List[Dict]) -> 
             dataset=rag_eval_dataset,
             metrics=metrics_to_evaluate,
             llm=judge_llm,
-            embeddings=OpenAIEmbeddings(
-                model="text-embedding-3-small",
-                openai_api_key=OPENAI_API_KEY
-            ),
+            embeddings=get_embedding_model(),
             batch_size=1  # Process one at a time to avoid rate limits
         )
         
-        print("✓ Evaluation complete")
+        print("Evaluation complete")
         return results, questions, answers, contexts
     
     except Exception as e:
-        print(f"⚠️  Error during RAGAs evaluation: {e}")
+        print(f"Error during RAGAs evaluation: {e}")
         print("Attempting fallback evaluation...")
         return None, questions, answers, contexts
 
@@ -362,7 +406,7 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
         try:
             metrics_dict = {
                 "Faithfulness": results.get("faithfulness", 0),
-                "Answer Relevance": results.get("answer_relevance", 0),
+                "Answer Relevance": results.get("answer_relevancy", results.get("answer_relevance", 0)),
                 "Context Precision": results.get("context_precision", 0),
                 "Context Recall": results.get("context_recall", 0)
             }
@@ -374,20 +418,20 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
             # Create metrics table
             metrics_df = pd.DataFrame([metrics_dict])
             
-            print("\n📈 RAGAs Metrics Table:")
+            print("\nRAGAs Metrics Table:")
             print("-" * 80)
             print(metrics_df.to_string())
             print("-" * 80)
             
             # Calculate and print average score
             avg_score = np.mean(list(metrics_dict.values()))
-            print(f"\n📊 Average Score: {avg_score:.4f}")
+            print(f"\nAverage Score: {avg_score:.4f}")
         
         except Exception as e:
-            print(f"⚠️  Could not format metrics table: {e}")
+            print(f"Could not format metrics table: {e}")
             print(f"Raw results: {results}")
     else:
-        print("⚠️  No evaluation results available (check API keys and rate limits)")
+        print("No evaluation results available (check GROQ API key and rate limits)")
     
     # Print sample query with answer and contexts
     if questions and answers and contexts:
@@ -397,13 +441,13 @@ def print_results(results: Dict, questions: List[str], answers: List[str], conte
         
         sample_idx = 0  # First query as demo
         
-        print(f"\n❓ Question:")
+        print(f"\nQuestion:")
         print(f"   {questions[sample_idx]}\n")
         
-        print(f"💬 Generated Answer:")
+        print(f"Generated Answer:")
         print(f"   {answers[sample_idx]}\n")
         
-        print(f"📚 Retrieved Context Chunks ({len(contexts[sample_idx])} chunks):")
+        print(f"Retrieved Context Chunks ({len(contexts[sample_idx])} chunks):")
         print("-" * 80)
         for i, context in enumerate(contexts[sample_idx], 1):
             print(f"\n[Chunk {i}]")
@@ -423,17 +467,12 @@ def main():
     
     try:
         # Step 1: Create/Load Vector Store
-        if Path(CHROMA_DB_PATH).exists():
-            print("\n🔄 Chroma database exists. Using existing database...")
-            vector_store = load_chroma_store()
-        else:
-            print("\n🆕 Creating new Chroma vector store...")
-            vector_store = create_chroma_store(reset=True)
+        vector_store = get_or_create_chroma_store()
         
         # Step 2: Load evaluation dataset
-        print("\n📋 Loading evaluation dataset...")
+        print("\nLoading evaluation dataset...")
         eval_data = get_evaluation_dataset()
-        print(f"✓ Loaded {len(eval_data)} evaluation triplets")
+        print(f"Loaded {len(eval_data)} evaluation triplets")
         
         # Step 3: Evaluate RAG pipeline
         results, questions, answers, contexts = evaluate_rag_pipeline(vector_store, eval_data)
@@ -442,15 +481,15 @@ def main():
         print_results(results, questions, answers, contexts)
         
         print("\n" + "="*80)
-        print(" ✅ Pipeline evaluation complete!")
+        print("Pipeline evaluation complete!")
         print("="*80 + "\n")
     
     except KeyboardInterrupt:
-        print("\n\n⏹️  Process interrupted by user")
+        print("\n\nProcess interrupted by user")
         sys.exit(0)
     
     except Exception as e:
-        print(f"\n❌ Error during pipeline execution: {e}")
+        print(f"\nError during pipeline execution: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

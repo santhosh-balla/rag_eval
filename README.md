@@ -1,13 +1,13 @@
 # RAG Pipeline with Groq & RAGAs Evaluation
 
-A baseline Retrieval-Augmented Generation (RAG) pipeline using Groq API, OpenAI embeddings, and RAGAs for automated evaluation.
+A baseline Retrieval-Augmented Generation (RAG) pipeline using Groq API, local HuggingFace embeddings, and RAGAs for automated evaluation.
 
 ## 📋 Quick Summary
 
 This project implements:
 
 - **RAG Pipeline**: Retrieves relevant text chunks from domain documents and generates answers using Groq's Llama 3.1 70B
-- **Vector Store**: Local Chroma database with OpenAI embeddings (text-embedding-3-small)
+- **Vector Store**: Local Chroma database with local HuggingFace embeddings (`sentence-transformers/all-MiniLM-L6-v2`)
 - **Evaluation**: 5 gold-standard Q&A pairs evaluated with RAGAs metrics (Faithfulness, Answer Relevance, Context Precision, Context Recall)
 - **Domains**: Java Textbook, Terms & Conditions, Product Catalog
 
@@ -27,13 +27,13 @@ Create a `.env` file in the workspace root (copy from `.env.example`):
 
 ```bash
 GROQ_API_KEY=your_groq_api_key
-OPENAI_API_KEY=your_openai_api_key
 ```
 
 **Get API Keys**:
 
 - **Groq API**: https://console.groq.com/keys
-- **OpenAI API**: https://platform.openai.com/api-keys
+
+No OpenAI key is required.
 
 ### 3. Verify Domain Files
 
@@ -147,8 +147,13 @@ Higher scores (closer to 1.0) indicate better performance.
 
 ### "API key not found" Error
 
-- Ensure `.env` file exists with `GROQ_API_KEY` and `OPENAI_API_KEY`
+- Ensure `.env` file exists with `GROQ_API_KEY`
 - Check that keys are valid and have sufficient quota/credits
+
+### Slow First Run
+
+- The first run may download the local embedding model (`sentence-transformers/all-MiniLM-L6-v2`)
+- Subsequent runs use the cached model
 
 ### "Domain file not found" Error
 
@@ -194,11 +199,7 @@ Edit `get_evaluation_dataset()` in `rag_pipeline.py`:
 
 ### Switch Embeddings Provider
 
-Replace `OpenAIEmbeddings()` with alternatives:
-
-- HuggingFace Embeddings (free, local)
-- Cohere Embeddings (commercial)
-- Other LangChain-supported embeddings
+Replace `HuggingFaceEmbeddings()` with another LangChain-supported embeddings provider if needed.
 
 ## 📚 Additional Resources
 
