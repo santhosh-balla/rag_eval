@@ -1,0 +1,204 @@
+base_question_id,variant_id,domain,question,rag_answer,faithfulness,answer_relevance,correctness,context_relevance
+java_inheritance,0,java_textbook,What is inheritance in Java and how does it work?,"Inheritance in Java is a mechanism where a new class, known as the derived class, is created based on an existing class, known as the base class. The derived class inherits the properties and behaviors of the base class using the 'extends' keyword. This means that the derived class automatically includes all the non-private members (attributes and methods) of the base class.
+
+In Java, a class can directly inherit from only one base class, which is known as single inheritance. However, a class can implement multiple interfaces, allowing it to inherit behavior from multiple sources.
+
+The process of inheritance works as follows:
+
+1. The derived class extends the base class using the 'extends' keyword.
+2. The derived class inherits all non-private members of the base class, including attributes and methods.
+3. The derived class can override methods of the base class to provide specialized implementations.
+4. The 'super' keyword is used to access members of the base class from the derived class.
+
+Inheritance promotes code reusability and establishes a natural hierarchy between classes. It allows developers to create a new class based on an existing class, reducing code duplication and improving maintainability.
+
+For example, in the given code, the `Student` class extends the `Person` class, inheriting its attributes and methods. The `Student` class then overrides the `introduce` method to provide a specialized implementation that includes the student's GPA. This demonstrates how inheritance can be used to create a new class that builds upon the properties and behaviors of an existing class.",5,5,5,4
+java_inheritance,1,java_textbook,Can you explain the concept of inheritance in Java and describe the mechanism behind it?,"In Java, inheritance is a fundamental concept in object-oriented programming that allows one class to inherit the properties and behaviors of another class. The class that is being inherited from is called the base class or superclass, while the class that does the inheriting is called the derived class or subclass.
+
+The mechanism behind inheritance in Java is as follows: a derived class extends a base class using the 'extends' keyword. This allows the derived class to inherit all non-private members of the base class, including fields and methods. The derived class can then use these inherited members as if they were its own, or it can override them to provide specialized implementations.
+
+For example, consider a base class called 'Person' that has a 'name' field and an 'introduce' method. A derived class called 'Student' can extend the 'Person' class and inherit its fields and methods. The 'Student' class can then add its own fields, such as 'gpa', and override the 'introduce' method to include its GPA.
+
+The key points about inheritance in Java are:
+
+1. **Inheritance of non-private members**: The derived class inherits all non-private members of the base class.
+2. **Method overriding**: The derived class can override methods of the base class to provide specialized implementations.
+3. **Access to base class members**: The derived class can access members of the base class using the 'super' keyword.
+4. **Implicit inheritance**: If no explicit inheritance is specified, a class implicitly extends the 'Object' class, which is the superclass of all classes in Java.
+
+Inheritance promotes code reusability and establishes a natural hierarchy between classes, making it a powerful tool for building complex software systems in Java.",5,5,5,4
+java_inheritance,2,java_textbook,"In Java, how does inheritance function, and what does it actually mean?","In Java, inheritance is a mechanism where a new class, known as the derived class or subclass, is created based on an existing class, known as the base class or superclass. The derived class inherits all non-private members (properties and behaviors) of the base class and can also add new members or override the ones inherited from the base class to provide specialized implementations.
+
+In other words, inheritance allows a subclass to inherit the attributes and methods of a superclass, promoting code reusability and establishing a natural hierarchy between classes. This means that the subclass can use the fields and methods of the superclass as if they were its own, and can also add new fields and methods or modify the ones inherited from the superclass.
+
+For example, in the given code, the `Student` class inherits the `name` and `age` attributes from the `Person` class and adds a new attribute `gpa`. The `Student` class also overrides the `introduce` method of the `Person` class to provide a specialized implementation that includes the student's GPA.
+
+Key aspects of inheritance in Java include:
+
+* A subclass can inherit from only one superclass (single inheritance).
+* A subclass can implement multiple interfaces.
+* The `extends` keyword is used to specify the superclass.
+* The `super` keyword is used to access members of the superclass from the subclass.
+* If no explicit inheritance is specified, a class implicitly extends the `Object` class, which is the superclass of all classes in Java.
+
+Overall, inheritance in Java enables the creation of a hierarchy of classes, where a subclass can build upon the attributes and behaviors of a superclass, promoting code reuse and facilitating the development of more complex and specialized classes.",5,5,5,4
+java_inheritance,3,java_textbook,"Describe Java inheritance: what is it, and how is it implemented in practice?","Java inheritance is a mechanism that allows a new class (derived class) to inherit properties and behaviors from an existing class (base class). This promotes code reusability and establishes a natural hierarchy between classes. 
+
+In practice, Java inheritance is implemented using the 'extends' keyword, where the derived class extends the base class. The derived class inherits all non-private members of the base class and can also override methods of the base class to provide specialized implementations. The 'super' keyword is used to access members of the base class from the derived class.
+
+For example, in the given code, the `Student` class extends the `Person` class using the `extends` keyword. The `Student` class inherits the `name` and `age` attributes, as well as the `introduce` method from the `Person` class. The `Student` class also overrides the `introduce` method to provide a specialized implementation that includes the student's GPA.
+
+It's worth noting that in Java, a class can directly inherit from only one base class (single inheritance), but it can implement multiple interfaces. If no explicit inheritance is specified, a class implicitly extends the `Object` class, which is the superclass of all classes in Java.",5,5,5,4
+java_inheritance,4,java_textbook,"How do Java classes inherit from other classes, and what is inheritance conceptually?","In Java, classes inherit from other classes using the 'extends' keyword, where a new class (derived class) is created that inherits properties and behaviors from an existing class (base class). Conceptually, inheritance is a mechanism that promotes code reusability and establishes a natural hierarchy between classes, allowing a derived class to inherit all non-private members of the base class and potentially override methods to provide specialized implementations. This means that a derived class can build upon the attributes and methods of the base class, adding new functionality or modifying existing behavior as needed. In Java, a class can directly inherit from only one base class (single inheritance), but it can implement multiple interfaces.",5,5,5,5
+java_inheritance,5,java_textbook,Walk me through what inheritance means in Java and the way it operates under the hood.,"Inheritance in Java is a fundamental concept in object-oriented programming that allows one class to inherit the properties and behaviors of another class. The class that is being inherited from is called the base class or superclass, while the class that does the inheriting is called the derived class or subclass.
+
+Here's how it works:
+
+1. **Creating a Derived Class**: When you create a new class, you can specify that it extends an existing class using the `extends` keyword. For example, `public class Student extends Person` means that the `Student` class is a derived class that inherits from the `Person` class.
+2. **Inheriting Members**: The derived class automatically inherits all non-private members (methods and variables) of the base class. This means that the derived class can use and access the members of the base class as if they were its own.
+3. **Overriding Methods**: The derived class can also override methods of the base class to provide its own specialized implementation. This is done using the `@Override` annotation, which indicates that the method is intended to override a method in the base class.
+4. **Accessing Base Class Members**: The derived class can access members of the base class using the `super` keyword. For example, `super.name` would refer to the `name` variable in the base class.
+5. **Implicit Inheritance**: If no explicit inheritance is specified, a class implicitly extends the `Object` class, which is the superclass of all classes in Java.
+
+Under the hood, when you create an instance of a derived class, Java creates a new object that contains all the members of the base class, plus any additional members defined in the derived class. The derived class's constructor is responsible for initializing the base class's members, either explicitly or implicitly.
+
+Here's an example to illustrate this:
+
+```java
+public class Person {
+    protected String name;
+    protected int age;
+    
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+public class Student extends Person {
+    private double gpa;
+    
+    public Student(String name, int age, double gpa) {
+        super(name, age); // Implicitly calls the Person constructor
+        this.gpa = gpa;
+    }
+}
+```
+
+In this example, the `Student` class extends the `Person` class and inherits its `name` and `age` variables. The `Student` class also defines its own `gpa` variable and overrides the `introduce` method to provide a specialized implementation.
+
+When you create a `Student` object, Java creates a new object that contains all the members of the `Person` class, plus the `gpa` variable and the overridden `introduce` method. The `Student` constructor is responsible for initializing the `Person` class's members using the `super` keyword.
+
+Overall, inheritance in Java allows you to create a hierarchy of classes that can share common properties and behaviors, while also providing a way to specialize and extend the behavior of existing classes.",4,5,5,5
+tc_limitations,0,terms_conditions,What are the limitations and disclaimers mentioned in the Terms and Conditions?,"The limitations and disclaimers mentioned in the Terms and Conditions include:
+
+1. **Disclaimer of Warranties**: SoftwareHub makes no warranties, expressed or implied, and disclaims all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+2. **Limitation of Liability**: SoftwareHub and its suppliers are not liable for any damages, including loss of data or profit, or business interruption, arising out of the use or inability to use the materials on the website.
+3. **No Endorsement of Linked Sites**: SoftwareHub is not responsible for the contents of linked sites and does not endorse them. Use of linked sites is at the user's own risk.
+4. **No Notice of Modifications**: SoftwareHub may revise the terms of service at any time without notice, and users are bound by the current version of the terms of service.
+
+These limitations and disclaimers aim to protect SoftwareHub from potential liabilities and emphasize the user's responsibility when using the website and its services.",4,5,4,5
+tc_limitations,1,terms_conditions,Which disclaimers and limitations of liability does the Terms and Conditions document list?,"The Terms and Conditions document lists the following disclaimers and limitations of liability:
+
+1. **Disclaimer of Warranties**: SoftwareHub makes no warranties, expressed or implied, and disclaims all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+2. **Limitation of Liability**: SoftwareHub or its suppliers shall not be liable for any damages, including damages for loss of data or profit, or due to business interruption, arising out of the use or inability to use the materials on SoftwareHub's website.
+3. **Grant of License**: The document grants a limited license to use the materials on the website, which does not include modifying, copying, or using the materials for commercial purposes or public display.
+4. **Exclusive Jurisdiction**: The document also states that the terms and conditions are governed by and construed in accordance with the laws of the United States, and the user irrevocably submits to the exclusive jurisdiction of the courts in that location.
+
+These disclaimers and limitations of liability are scattered throughout the document, specifically in sections 3 (Disclaimer), 4 (Limitations), 8 (Governing Law), and 2 (Use License).",4,5,4,5
+tc_limitations,2,terms_conditions,"According to the T&C, what warranty disclaimers and limitation-of-liability clauses are present?","According to the Terms and Conditions, the following warranty disclaimers and limitation-of-liability clauses are present:
+
+1. **Warranty Disclaimer (Section 3: Disclaimer)**: SoftwareHub makes no warranties, expressed or implied, and disclaims all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other rights.
+
+2. **Limitation of Liability (Section 4: Limitations)**: SoftwareHub or its suppliers shall not be liable for any damages, including loss of data or profit, or business interruption, arising from the use or inability to use the materials on the website, even if notified of the possibility of such damage.
+
+These clauses indicate that SoftwareHub does not guarantee the quality or performance of its products or services and limits its liability for any potential damages or losses incurred by users.",5,5,5,4
+tc_limitations,3,terms_conditions,List the limitations and disclaimers that appear in the Terms and Conditions.,"The limitations and disclaimers that appear in the Terms and Conditions are:
+
+1. **Disclaimer of Warranties**: SoftwareHub makes no warranties, expressed or implied, and disclaims all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property.
+2. **Limitation of Liability**: SoftwareHub or its suppliers shall not be liable for any damages, including loss of data or profit, or due to business interruption, arising out of the use or inability to use the materials on the website.
+3. **Use License Restrictions**: The license granted to use the materials is limited to personal, non-commercial, transitory viewing only, and does not allow for:
+   - Modifying or copying the materials
+   - Using the materials for commercial purposes or public display
+   - Decompiling or reverse engineering software contained on the website.
+
+These limitations and disclaimers are outlined in sections 3 (Disclaimer), 4 (Limitations), and 2 (Use License) of the Terms and Conditions.",5,5,4,5
+tc_limitations,4,terms_conditions,"What does the Terms and Conditions say about warranties, disclaimers, and liability limits?","According to the Terms and Conditions, SoftwareHub makes no warranties, expressed or implied, and disclaims all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property. Additionally, SoftwareHub limits its liability, stating that it shall not be liable for any damages, including loss of data or profit, or business interruption, arising from the use or inability to use the materials on its website. This disclaimer applies even if SoftwareHub has been notified of the possibility of such damage.",5,5,4,5
+tc_limitations,5,terms_conditions,Summarize the liability limitations and disclaimer statements included in the T&C.,"The Terms and Conditions (T&C) of SoftwareHub include the following liability limitations and disclaimer statements:
+
+1. **Limitation of Liability**: SoftwareHub and its suppliers are not liable for any damages, including loss of data or profit, or business interruption, arising from the use or inability to use the materials on the website.
+2. **Disclaimer**: The materials on the website are provided ""as is"" without any warranties, expressed or implied. SoftwareHub disclaims and negates all other warranties, including implied warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other rights.
+
+In summary, SoftwareHub is not responsible for any damages or losses resulting from the use of its website or materials, and it does not provide any warranties or guarantees regarding the quality, accuracy, or reliability of the materials provided.",5,5,5,4
+cloudhost_features,0,product_catalog,What are the key features offered by CloudHost Business Plan?,"The key features offered by the CloudHost Business Plan (Product ID: TS-CS-001) include:
+
+1. Automatic load balancing
+2. Auto-scaling
+3. 99.99% uptime SLA
+4. Managed databases (MySQL, PostgreSQL, MongoDB)
+5. CDN
+6. DDoS protection
+7. 24/7 monitoring and incident response
+8. Unlimited bandwidth
+9. 500 GB SSD storage
+10. API rate: 1 million requests/month included",5,5,5,4
+cloudhost_features,1,product_catalog,Which main features does the CloudHost Business Plan include?,"The main features of the CloudHost Business Plan (Product ID: TS-CS-001) include:
+
+1. Automatic load balancing
+2. Auto-scaling
+3. 99.99% uptime SLA
+4. Managed databases (MySQL, PostgreSQL, MongoDB)
+5. CDN (Content Delivery Network)
+6. DDoS protection
+
+Additionally, the plan includes the following inclusions:
+- 500 GB SSD storage
+- Unlimited bandwidth
+- 24/7 monitoring and incident response
+- API rate: 1 million requests/month included",5,5,5,4
+cloudhost_features,2,product_catalog,Describe the core capabilities bundled with the CloudHost Business Plan.,"The CloudHost Business Plan (Product ID: TS-CS-001) offers a scalable cloud hosting platform with several core capabilities, including:
+
+1. **Automatic load balancing**: Ensures efficient distribution of workload across servers to maintain performance.
+2. **Auto-scaling**: Dynamically adjusts resources to match changing demands, ensuring optimal performance and minimizing downtime.
+3. **99.99% uptime SLA**: Guarantees high availability and reliability of the hosting platform.
+4. **Managed databases**: Supports management of popular databases such as MySQL, PostgreSQL, and MongoDB.
+5. **Content Delivery Network (CDN)**: Enhances content delivery and reduces latency.
+6. **DDoS protection**: Provides protection against distributed denial-of-service attacks to ensure security and availability.
+
+These capabilities are complemented by additional inclusions such as 500 GB SSD storage, unlimited bandwidth, 24/7 monitoring and incident response, and an API rate of 1 million requests per month.",5,5,5,4
+cloudhost_features,3,product_catalog,What do you get with the CloudHost Business Plan; what are its headline features?,"With the CloudHost Business Plan (Product ID: TS-CS-001), you get a scalable cloud hosting platform that includes several key features. The headline features of this plan are:
+
+1. **Automatic load balancing** and **auto-scaling** for efficient resource management.
+2. **99.99% uptime SLA**, ensuring high availability of your hosted services.
+3. **Managed databases** (supporting MySQL, PostgreSQL, and MongoDB) for streamlined database management.
+4. **CDN (Content Delivery Network)** for faster content distribution.
+5. **DDoS protection** to safeguard against potential cyber threats.
+
+These features are designed to provide a robust, secure, and reliable cloud hosting environment for businesses. Additionally, the plan includes 500 GB of SSD storage, unlimited bandwidth, 24/7 monitoring and incident response, and an API rate of 1 million requests per month.",5,5,5,4
+cloudhost_features,4,product_catalog,List the primary features provided under the CloudHost Business Plan.,"The primary features provided under the CloudHost Business Plan (Product ID: TS-CS-001) are:
+
+1. Scalable cloud hosting platform
+2. Automatic load balancing
+3. Auto-scaling
+4. 99.99% uptime SLA
+5. Managed databases (MySQL, PostgreSQL, MongoDB)
+6. CDN (Content Delivery Network)
+7. DDoS protection
+
+Additionally, the plan includes the following inclusions:
+
+1. 500 GB SSD storage
+2. Unlimited bandwidth
+3. 24/7 monitoring and incident response
+4. API rate: 1 million requests/month included",5,5,5,4
+cloudhost_features,5,product_catalog,Can you summarize the key offerings of the CloudHost Business Plan?,"The CloudHost Business Plan (Product ID: TS-CS-001) is a scalable cloud hosting platform that offers the following key features:
+
+1. **Automatic load balancing and auto-scaling** for optimal performance.
+2. **99.99% uptime SLA** for high availability.
+3. **Managed databases** (MySQL, PostgreSQL, MongoDB) for easy database management.
+4. **CDN and DDoS protection** for enhanced security.
+5. **500 GB SSD storage** and **unlimited bandwidth** for ample storage and data transfer.
+6. **24/7 monitoring and incident response** for prompt support.
+7. **1 million API requests/month included** for integration with other services.
+
+The plan is priced at $499.99 per month (base) plus usage, and is available in 15 global data centers.",5,5,5,4

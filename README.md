@@ -215,3 +215,61 @@ This project is for educational purposes.
 ---
 
 **Questions or issues?** Review the troubleshooting section or check the API documentation links above.
+
+---
+
+## Week 2: LLM-as-a-Judge Evaluation
+
+Week 2 adds a second evaluation layer on top of the untouched Week 1 baseline: an LLM-as-a-judge scores each RAG output on a 4-metric rubric, a consistency test measures robustness to paraphrases, and a comparison pipeline cross-checks the judge against the Week 1 RAGAs scores.
+
+### How to run
+
+Place the Week 1 artifacts in a folder named `week1_artifacts/` at the repo root:
+
+```
+week1_artifacts/
+├── rag_outputs.json                  # 10 entries: question, ground_truth, context_domain, rag_answer, retrieved_contexts
+├── ragas_per_question_scores.csv     # per-question RAGAs scores, keyed by question
+└── ragas_domain_scorecard.csv        # Week 1 domain scorecard (kept for reference)
+```
+
+Then from the repo root:
+
+```bash
+pip install -r requirements.txt
+python run_week2_pipeline.py
+```
+
+`run_week2_pipeline.py` is the single entry point. It runs four phases in order and prints timing for each one.
+
+### Rubric and judge model
+
+The judge scores each RAG output on four metrics using an integer Likert scale from 1 to 5: **Faithfulness** (every claim supported by the retrieved context), **Answer Relevance** (directly addresses the question), **Correctness** (matches the ground truth semantically), and **Context Relevance** (retrieved chunks are on-topic). Each metric includes explicit anchor descriptions at 1 / 3 / 5 so scores are comparable across runs, and the judge must also output a one-sentence `reasoning` field justifying the lowest score. The judge model is **`llama-3.1-8b-instant`** (constant `JUDGE_MODEL` in `llm_judge.py`), deliberately different from the Week 1 generator (`llama-3.3-70b-versatile`) to reduce self-evaluation bias. All judge calls run at `temperature=0` and require strict JSON output; parse failures are retried once with a stricter reminder and record null scores on persistent failure rather than crashing the pipeline.
+
+### Scale note
+
+Judge scores are on a 1-5 integer scale. When joined against RAGAs (which returns 0-1 floats), the judge scores are also presented in normalized form (`judge_*_norm = judge_* / 5`) so deltas and correlations are meaningful. Both raw and normalized columns are kept in the comparison CSV.
+
+### Produced files
+
+- `llm_judge_outputs.json` — full per-question judge records (scores, reasoning, raw response).
+- `llm_judge_scores.csv` — flat table (`question, domain, faithfulness, answer_relevance, correctness, context_relevance`), keyed by question for joining with Week 1 RAGAs scores.
+- `consistency_test_results.csv` — all 18 paraphrase runs (3 base questions × 6 variants): question text, RAG answer, and 4 judge scores per row.
+- `consistency_summary.csv` — per base question, per metric: mean and std across the 6 variants.
+- `week2_comparison.csv` — per-question side-by-side: `ragas_faithfulness`, `judge_faithfulness_norm`, `delta_faithfulness`, `ragas_context_precision`, `judge_context_relevance_norm`, `delta_context`, `ragas_context_recall` (reference), `judge_answer_relevance_norm`, `judge_correctness_norm`.
+- `week2_domain_scorecard.csv` — per-domain means of the six comparable metrics above.
+- `correlations.csv` — Pearson and Spearman `r` and `p` for `ragas_faithfulness` vs `judge_faithfulness_norm` and for `ragas_context_precision` vs `judge_context_relevance_norm`.
+- `divergence_cases.csv` — top 3 questions where the judge and RAGAs disagree most (|delta| ≥ 0.3 on the normalized scale), including the full RAG answer and the judge's reasoning.
+- `figures/fig_ragas_vs_judge_scatter.png` — scatter of RAGAs vs judge faithfulness with y=x reference, colored by domain.
+- `figures/fig_domain_comparison_bar.png` — grouped bar chart of per-domain faithfulness means (RAGAs vs judge).
+- `figures/fig_consistency_heatmap.png` — heatmap of std across 6 variants (lower = more consistent) per base question × metric.
+
+### Files added in Week 2 (for reference)
+
+- `llm_judge.py` — judge module (prompt, `score_one`, `score_batch`, model constant).
+- `run_judge_on_week1.py` — runs the judge over the 10 Week 1 RAG outputs.
+- `consistency_test.py` — 3 base questions × 6 paraphrase variants, uses `get_rag_response` + `get_or_create_chroma_store` from `rag_pipeline.py`.
+- `compare_ragas_vs_judge.py` — joins on `question`, normalizes judge scores, computes deltas, correlations, and divergences.
+- `visualize_week2.py` — matplotlib figures (dpi=150, `tight_layout`).
+- `run_week2_pipeline.py` — orchestrator.
+

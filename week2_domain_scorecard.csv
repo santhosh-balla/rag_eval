@@ -1,0 +1,5 @@
+domain,ragas_faithfulness,judge_faithfulness_norm,ragas_context_precision,judge_context_relevance_norm,judge_answer_relevance_norm,judge_correctness_norm
+honeywell_products,0.8333333333333334,0.9333333333333332,0.44444444442222225,0.9333333333333332,0.9333333333333332,0.6666666666666666
+java_textbook,0.7307692307692308,1.0,0.9999999999444444,0.8000000000000002,1.0,1.0
+product_catalog,1.0,1.0,0.9999999999,0.8,1.0,0.9
+terms_conditions,0.9166666666666667,1.0,0.8499999999383334,0.9,1.0,0.9

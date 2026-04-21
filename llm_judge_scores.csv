@@ -1,0 +1,11 @@
+question,domain,faithfulness,answer_relevance,correctness,context_relevance
+What is inheritance in Java and how does it work?,java_textbook,5,5,5,4
+What are the limitations and disclaimers mentioned in the Terms and Conditions?,terms_conditions,5,5,4,5
+What are the key features offered by CloudHost Business Plan?,product_catalog,5,5,5,4
+What access modifiers exist in Java and what do they control?,java_textbook,5,5,5,4
+What is the price of CodeMaster Pro 2024 and what platforms does it support?,product_catalog,5,5,4,4
+What sensor technologies does the Honeywell XNX Universal Transmitter support and what is its combustible gas detection range?,honeywell_products,5,5,4,5
+What voltage systems does the Honeywell T4 Pro thermostat work with and what is its heating temperature range?,honeywell_products,4,4,2,4
+What are the MS/TP LAN wiring requirements for the Honeywell BACnet Fixed Function Thermostat?,honeywell_products,5,5,4,5
+What is a class in Java and how is it declared?,java_textbook,5,5,5,4
+"Under what conditions does the SoftwareHub license terminate, and what must the user do after termination?",terms_conditions,5,5,5,4

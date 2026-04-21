@@ -1,0 +1,6 @@
+,faithfulness,context_precision,context_recall,Domain Avg
+honeywell_products,0.8333,0.4444,0.7778,0.6852
+java_textbook,0.7308,1.0,1.0,0.9103
+product_catalog,1.0,1.0,0.8333,0.9444
+terms_conditions,0.9167,0.85,0.875,0.8806
+OVERALL,0.8526,0.8033,0.875,0.8436

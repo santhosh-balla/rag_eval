@@ -1,0 +1,3 @@
+metric_pair,pearson_r,pearson_p,spearman_r,spearman_p
+ragas_faithfulness_vs_judge_faithfulness_norm,0.5839114989267911,0.0763358044284091,0.5249994873054386,0.11918883002444668
+ragas_context_precision_vs_judge_context_relevance_norm,-0.24262729553591147,0.4994087237014745,-0.1985440540698622,0.5824043384090345

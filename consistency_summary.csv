@@ -1,0 +1,13 @@
+base_question_id,domain,metric,mean,std
+java_inheritance,java_textbook,faithfulness,4.833333333333333,0.408248290463863
+java_inheritance,java_textbook,answer_relevance,5.0,0.0
+java_inheritance,java_textbook,correctness,5.0,0.0
+java_inheritance,java_textbook,context_relevance,4.333333333333333,0.5163977794943223
+tc_limitations,terms_conditions,faithfulness,4.666666666666667,0.5163977794943223
+tc_limitations,terms_conditions,answer_relevance,5.0,0.0
+tc_limitations,terms_conditions,correctness,4.333333333333333,0.5163977794943223
+tc_limitations,terms_conditions,context_relevance,4.666666666666667,0.5163977794943223
+cloudhost_features,product_catalog,faithfulness,5.0,0.0
+cloudhost_features,product_catalog,answer_relevance,5.0,0.0
+cloudhost_features,product_catalog,correctness,5.0,0.0
+cloudhost_features,product_catalog,context_relevance,4.0,0.0
